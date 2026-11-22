@@ -1,13 +1,4 @@
-¡Me encanta esa actitud! Si quieres que este repo grite "Senior / Pro", tenemos que usar Mermaid para los diagramas y una estructura de documentación impecable.
-
-Como el nombre es Hydra-prompt-breaker, el README tiene que sonar a una herramienta de Pentesting profesional. Aquí tienes el código exacto para que lo copies y pegues en tu README.md.
-
-Incluye el diagrama de flujo de Mermaid, la tabla de los payloads (ataques) y la estructura de nivel empresarial.
-
-Copia todo esto desde el # hasta el final:
-
-```markdown
-# 🐍 Hydra-Prompt-Breaker: Automated LLM Red Teaming
+🐍 Hydra-Prompt-Breaker: Automated LLM Red Teaming
 
 **Hydra-Prompt-Breaker** is an offensive security framework designed to automate adversarial testing against Large Language Model (LLM) applications. 
 
