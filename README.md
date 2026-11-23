@@ -109,6 +109,14 @@ python -m streamlit run dashboard.py
 
 ---
 
+## 📸 UI Gallery
+
+*(A high-resolution static view of the Hydra Command Center)*
+
+![Hydra Command Center UI](assets/hydra_command_center_hud.png)
+
+---
+
 ## ⚠️ Ethical Disclaimer
 
 This tool is built for educational and authorized security testing purposes only. Do not use it against systems you do not own or have explicit permission to test. The author is not responsible for any misuse or damage caused by this program.
