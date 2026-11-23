@@ -1,5 +1,7 @@
 # 🐍 Hydra-Prompt-Breaker: Automated LLM Red Teaming
 
+[![Live Demo](https://img.shields.io/badge/🎥_Watch_Demo-View_GIF-success)](https://github.com/codewarrior777/Hydra-prompt-breaker#-live-action-demo)
+[![Target](https://img.shields.io/badge/🎯_Target-Aegis_Sentinel_v2-blue)](https://github.com/codewarrior777/prompt-aegis)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Status](https://img.shields.io/badge/Status-Active%20Development-brightgreen)
