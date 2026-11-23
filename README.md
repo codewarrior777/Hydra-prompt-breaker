@@ -14,7 +14,7 @@ It was built specifically to stress-test **[Aegis Sentinel](https://github.com/c
 
 ## 🎥 Live Action Demo
 
-![Hydra Dashboard Demo](assets/hydra_demo.gif)
+![Hydra Dashboard Demo](assets/hydra_command_center_hud.png)
 
 ---
 
