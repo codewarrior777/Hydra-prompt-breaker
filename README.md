@@ -1,5 +1,7 @@
 # 🐍 Hydra-Prompt-Breaker: Automated LLM Red Teaming
 
+[![Live Demo](https://img.shields.io/badge/🎥_Watch_Demo-View_GIF-success)](https://github.com/codewarrior777/Hydra-prompt-breaker#-live-action-demo)
+[![Target](https://img.shields.io/badge/🎯_Target-Aegis_Sentinel_v2-blue)](https://github.com/codewarrior777/prompt-aegis)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Status](https://img.shields.io/badge/Status-Active%20Development-brightgreen)
@@ -104,6 +106,14 @@ python -m streamlit run dashboard.py
 ```
 
 *(Optional: To run the headless CLI version, use `python hydra.py`)*
+
+---
+
+## 📸 UI Gallery
+
+*(A high-resolution static view of the Hydra Command Center)*
+
+![Hydra Command Center UI](assets/hydra_command_center_hud.png)
 
 ---
 
