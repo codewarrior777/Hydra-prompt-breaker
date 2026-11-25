@@ -58,7 +58,7 @@ graph TD
 
 ---
 
-## ⚡ God Tier Features
+## 🛠️ Offensive Capabilities
 
 - **Terminal-Style Execution Log:** Watch the attacks execute in real-time with color-coded results (Green for Blocked, Red for Bypassed).
 - **Interactive Evasion Gauge:** A Plotly-powered speedometer that calculates the success rate of the Red Team attacks.
