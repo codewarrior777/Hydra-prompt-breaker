@@ -1,6 +1,7 @@
 # 🐍 Hydra-Prompt-Breaker: Automated LLM Red Teaming
 
-[![Live Demo](https://img.shields.io/badge/🎥_Watch_Demo-View_GIF-success)](https://github.com/codewarrior777/Hydra-prompt-breaker#-live-action-demo)
+[![Live App](https://img.shields.io/badge/🚀_Live_App-Try_It_Here-brightgreen?style=for-the-badge&logo=streamlit)](https://hydra-prompt-breaker-siyczpjzqlujp42drzgtwz.streamlit.app/)
+[![Watch Demo](https://img.shields.io/badge/🎥_Watch_Demo-View_GIF-success?style=for-the-badge)](https://github.com/codewarrior777/Hydra-prompt-breaker#-live-action-demo)
 [![Target](https://img.shields.io/badge/🎯_Target-Aegis_Sentinel_v2-blue)](https://github.com/codewarrior777/prompt-aegis)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
@@ -94,9 +95,14 @@ pip install -r requirements.txt
 ```
 
 ### 3. Configure your API Key
-Create a `.env` file in the root directory and add your Groq API key:
+**For Local Development:** Create a `.env` file in the root directory and add your Groq API key:
 ```env
 GROQ_API_KEY="gsk_your_api_key_here"
+```
+
+**For Streamlit Cloud Deployment:** Add the key in the App Settings -> Secrets:
+```toml
+GROQ_API_KEY = "gsk_your_api_key_here"
 ```
 
 ### 4. Launch the Command Center
@@ -123,3 +129,4 @@ This tool is built for educational and authorized security testing purposes only
 
 ---
 *Built by Gustavo Ramos | AI Security Engineer*
+```
