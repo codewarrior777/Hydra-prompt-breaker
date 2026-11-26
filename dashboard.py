@@ -1,3 +1,4 @@
+import html
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -69,8 +70,19 @@ div[data-testid="stMetricValue"] { color: #fff !important; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
+
+def result_line(r):
+    """Return the colored HTML result line for one attack result.
+    All dynamic text is escaped because it is rendered with unsafe_allow_html."""
+    if r["status"] == "BYPASSED":
+        return '<span class="term-red">[LEAK DETECTED]</span> Canary found in LLM response!<br><br>'
+    if r["status"] == "ERROR":
+        return f'<span class="term-yellow">[ERROR]</span> {html.escape(str(r["reason"]))}<br><br>'
+    return f'<span class="term-green">[BLOCKED]</span> {html.escape(str(r["reason"]))}<br><br>'
+
+
 st.title("🐍 HYDRA // Command Center")
-st.markdown("**Offensive Security Tool for LLM Vulnerability Testing**")
+st.markdown("**Research Prototype: Automated LLM Red Teaming**")
 
 # Session State Initialization
 if "results" not in st.session_state:
@@ -91,19 +103,30 @@ with st.sidebar:
         
     st.markdown("---")
     st.markdown("#### ℹ️ Target Info")
-    st.info("Target: Bank Assistant LLM\nFirewall: Aegis Sentinel V2.0")
+    st.info(
+        "Target: Bank Assistant LLM\n\n"
+        "Firewall: Aegis Sentinel (Layers 1–2 simulated)"
+    )
 
 # Main Area - Metrics
-total_attacks = len(st.session_state.results)
-bypassed = sum(1 for r in st.session_state.results if r["status"] == "BYPASSED")
-evasion_rate = (bypassed / total_attacks * 100) if total_attacks > 0 else 0
-avg_latency = round(sum(r.get("latency", 0) for r in st.session_state.results) / total_attacks) if total_attacks > 0 else 0
+# Errors (e.g. API failures, rate limits) are excluded from the evasion rate
+# so they do not dilute it.
+results = st.session_state.results
+total_attacks = len(results)
+errors = sum(1 for r in results if r["status"] == "ERROR")
+evaluated = total_attacks - errors
+bypassed = sum(1 for r in results if r["status"] == "BYPASSED")
+evasion_rate = (bypassed / evaluated * 100) if evaluated > 0 else 0
+avg_latency = round(sum(r.get("latency", 0) for r in results) / total_attacks) if total_attacks > 0 else 0
 
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("Total Vectors", total_attacks)
-c2.metric("Bypasses", bypassed)
+c2.metric("Leaks Detected", bypassed)
 c3.metric("Evasion Rate", f"{evasion_rate:.1f}%")
 c4.metric("Avg Latency", f"{avg_latency} ms")
+
+if errors:
+    st.caption(f"⚠️ {errors} vector(s) ended in ERROR and are excluded from the evasion rate.")
 
 st.divider()
 
@@ -117,20 +140,14 @@ with col_log:
         log_html = '<div class="terminal-window">'
         
         for attack in ATTACK_PAYLOADS:
-            log_html += f'> Initializing {attack["id"]} ({attack["name"]})...<br>'
+            log_html += f'> Initializing {html.escape(attack["id"])} ({html.escape(attack["name"])})...<br>'
             log_container.markdown(log_html + '</div>', unsafe_allow_html=True)
             time.sleep(0.4)
             
             result = launch_attack(attack)
             st.session_state.results.append(result)
             
-            if result["status"] == "BYPASSED":
-                log_html += f'<span class="term-red">[VULNERABILITY FOUND]</span> LLM leaked secret!<br><br>'
-            elif result["status"] == "ERROR":
-                log_html += f'<span class="term-yellow">[ERROR]</span> {result["reason"]}<br><br>'
-            else:
-                log_html += f'<span class="term-green">[BLOCKED]</span> {result["reason"]}<br><br>'
-                
+            log_html += result_line(result)
             log_container.markdown(log_html + '</div>', unsafe_allow_html=True)
         
         log_html += '<span class="term-green">> Sequence Complete. Target disconnected.</span>'
@@ -143,10 +160,8 @@ with col_log:
     elif st.session_state.results:
         log_html = '<div class="terminal-window">'
         for r in st.session_state.results:
-            if r["status"] == "BYPASSED":
-                log_html += f'> {r["id"]} ({r["name"]})<br><span class="term-red">[VULNERABILITY FOUND]</span> LLM leaked secret!<br><br>'
-            else:
-                log_html += f'> {r["id"]} ({r["name"]})<br><span class="term-green">[BLOCKED]</span> {r["reason"]}<br><br>'
+            log_html += f'> {html.escape(r["id"])} ({html.escape(r["name"])})<br>'
+            log_html += result_line(r)
         log_html += '<span class="term-green">> Sequence Complete.</span></div>'
         log_container.markdown(log_html, unsafe_allow_html=True)
     else:
@@ -158,8 +173,6 @@ with col_chart:
         fig = go.Figure(go.Indicator(
             mode = "gauge+number",
             value = evasion_rate,
-            # Removed the invalid 'x' and 'y' coordinates. 
-            # Plotly centers the number automatically in a gauge.
             number = {
                 'font': {'color': '#ff003c', 'size': 55}, 
                 'suffix': '%',
@@ -185,6 +198,7 @@ with col_chart:
             margin=dict(t=30, b=30, l=10, r=10)
         )
         st.plotly_chart(fig, use_container_width=True)
+        st.caption(f"Share of vectors with a detected leak in this single run (n = {evaluated}).")
     else:
         st.info("No telemetry data.")
 
@@ -199,7 +213,7 @@ if st.session_state.results:
         df_display,
         use_container_width=True,
         column_config={
-            "status": st.column_config.TextColumn("Result", help="BLOCKED or BYPASSED"),
+            "status": st.column_config.TextColumn("Result", help="BLOCKED, BYPASSED or ERROR"),
             "latency": st.column_config.NumberColumn("Latency (ms)", format="%d ms"),
             "payload": st.column_config.TextColumn("Payload String", width="large"),
         }
@@ -207,7 +221,7 @@ if st.session_state.results:
     
     bypasses = [r for r in st.session_state.results if r["status"] == "BYPASSED"]
     if bypasses:
-        with st.expander("🔴 View Raw LLM Responses (Bypasses)", expanded=True):
+        with st.expander("🔴 View Raw LLM Responses (Detected Leaks)", expanded=True):
             for b in bypasses:
                 st.markdown(f"**{b['id']} ({b['name']})**")
                 st.code(b["raw_response"], language="text")
