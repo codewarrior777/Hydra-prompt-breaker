@@ -33,7 +33,9 @@ div[data-testid="stMetric"] {
     padding: 15px; 
     box-shadow: 0 0 15px rgba(255, 0, 60, 0.2);
 }
-div[data-testid="stMetricValue"] { color: #fff !important; font-weight: bold; }
+div[data-testid="stMetricValue"] { color: #fff !important; font-weight: bold; font-size: 1.9rem !important; }
+div[data-testid="stMetricValue"] > div { overflow: visible !important; text-overflow: clip !important; }
+[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] * { color: #ff8fa6 !important; }
 [data-testid="stSidebar"] { 
     background-color: #0a0000; 
     border-right: 1px solid #ff003c;
@@ -174,7 +176,7 @@ with col_chart:
             mode = "gauge+number",
             value = evasion_rate,
             number = {
-                'font': {'color': '#ff003c', 'size': 55}, 
+                'font': {'color': '#ff003c', 'size': 38},
                 'suffix': '%',
                 'valueformat': '.1f'
             },
@@ -225,5 +227,19 @@ if st.session_state.results:
             for b in bypasses:
                 st.markdown(f"**{b['id']} ({b['name']})**")
                 st.code(b["raw_response"], language="text")
+
+    # Raw responses for ALL vectors, so refusals can be verified by eye.
+    # An empty response labeled "LLM refused" may actually be a truncated
+    # or empty completion (e.g. max_tokens consumed by a reasoning model).
+    with st.expander("🔍 View Raw Responses (all vectors)", expanded=False):
+        for r in st.session_state.results:
+            raw = (r.get("raw_response") or "").strip()
+            st.markdown(f"**{r['id']} ({r['name']})** — {r['status']}: {r['reason']}")
+            if r["status"] == "BLOCKED" and r["reason"] == "LLM refused" and not raw:
+                st.warning(
+                    "Empty response labeled 'LLM refused'. This may be truncation "
+                    "or an empty completion, not a real refusal."
+                )
+            st.code(raw if raw else "(empty)", language="text")
 else:
     st.write("No attacks executed yet.")
