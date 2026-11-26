@@ -144,7 +144,10 @@ python -m streamlit run dashboard.py
 
 ## 📸 UI Gallery
 
-![Hydra Command Center UI](assets/hydra_command_center_hud.png)
+![Hydra Command Center UI, run overview](assets/hydra_command_center_hud_1.png)
+![Hydra Command Center UI, audit log](assets/hydra_command_center_hud_2.png)
+
+*Screenshots of a single run (n = 5) with the working Layer 4 judge. They illustrate the interface and do not represent a measured detection rate.*
 
 ---
 
