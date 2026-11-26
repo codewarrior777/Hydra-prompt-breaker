@@ -9,15 +9,15 @@
 ![OWASP](https://img.shields.io/badge/OWASP-LLM01-red)
 ![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B)
 
-**Hydra-Prompt-Breaker** is an academic prototype of an automated adversarial testing harness for Large Language Model (LLM) applications.
+**Hydra-Prompt-Breaker** is a research prototype of an automated adversarial testing harness for Large Language Model (LLM) applications.
 
-It was built to explore and demonstrate the methodology of LLM red teaming against **[Aegis Sentinel](https://github.com/codewarrior777/prompt-aegis)**, a multi-layer AI firewall project. In this version, only a partial simulation of Aegis (Layers 1–2) is exercised. See [Known Limitations](#️-known-limitations).
+It was built to explore and demonstrate the methodology of LLM red teaming against **[Aegis Sentinel](https://github.com/codewarrior777/prompt-aegis)**, a multi-layer AI firewall project. In this version, only a partial simulation of Aegis (Layers 1–2) is exercised. See the Known Limitations section below.
 
 > *"In mythology, cutting off one of Hydra's heads causes two more to grow in its place. This mirrors the cat-and-mouse game of AI Security: block one prompt injection, and attackers will mutate the payload into new variations."*
 
 ## 🎓 Project Status & Scope
 
-This is a **pre-graduation academic project** (Computer Science & Information Security), built to learn and demonstrate how automated LLM red teaming works. It is a **prototype, not a validated security assessment tool**. Its results should not be read as a measurement of how secure Aegis Sentinel or any target model is.
+This is a **pre-graduation academic project** (Computer Science & Information Security) and guardrails research for the *Foundations of AI Engineering* course (CodePath), built to learn and demonstrate how automated LLM red teaming works. It is a **prototype, not a validated security assessment tool**. Its results should not be read as a measurement of how secure Aegis Sentinel or any target model is.
 
 ## 🎥 Live Action Demo
 
@@ -71,10 +71,10 @@ graph TD
 
 ## 🛠️ Features
 
-- **Terminal-Style Execution Log:** Watch the attacks execute in sequence with color-coded results (green for blocked, red for leak detected).
-- **Evasion Gauge:** A Plotly speedometer showing the share of attacks that led to a detected leak in the run.
+- **Terminal-Style Execution Log:** Watch the attacks execute in sequence with color-coded results (green for blocked, red for leak detected, yellow for errors).
+- **Evasion Gauge:** A Plotly speedometer showing the share of evaluated vectors with a detected leak in a single run. Vectors that end in an error (for example, an API failure) are excluded from the rate.
 - **Audit Log:** A data table with latency (ms), the reason for each result, and the raw payload string.
-- **Raw LLM Response Viewer:** For each detected leak, the exact output the LLM produced in that run.
+- **Raw Response Viewer:** View the exact response of every vector, not only detected leaks, so that refusals can be verified by eye. Empty responses labeled as refusals are flagged with a warning.
 
 ---
 
@@ -138,10 +138,11 @@ python -m streamlit run dashboard.py
 - **Small sample size:** 5 payloads, executed once each. LLM outputs are non-deterministic (temperature 0.5), so a single run is not statistically meaningful. Repeated trials and an attack success rate metric are planned.
 - **Partial firewall simulation:** Only Layer 1 (regex) and Layer 2 (encoding detection) of Aegis Sentinel are replicated, copied manually from its rules and not called from the real system. Layers 3–5 (including the Semantic Judge and Output Filter) are not exercised, so results do not reflect the full Aegis pipeline.
 - **Leak detection is exact-match only:** A leak is flagged only if the canary string appears verbatim. A spelled-out, translated, reversed, or encoded leak would be missed (false negatives).
-- **Result labels are coarse:** Any response without the exact canary is labeled "blocked / LLM refused", including empty, truncated, or partially compliant responses.
+- **Result labels are coarse:** Any LLM response without the exact canary is labeled "blocked / LLM refused". The dashboard warns about empty responses, but partial compliance is not detected.
 - **No false-positive testing:** No benign prompts are included, so the rate at which legitimate traffic is blocked is not measured.
-- **Single-turn, direct attacks only:** No multi-turn, indirect (RAG / document / tool-based) injection, or gradual extraction attacks.
-- **Possible output truncation:** `max_tokens=200` combined with a reasoning model may cut responses short and affect classification.
+- **Single-turn, direct attacks only:** No multi-turn, indirect (RAG / document / tool-based) injection, or gradual extraction attacks. The payloads are well-known classics that modern models are commonly trained against, so a low success rate says little about robustness to novel attacks.
+- **Possible output truncation:** `max_tokens=200` combined with a reasoning model could cut responses short and be mislabeled as refusals. In the author's test run the observed responses were complete refusals, but this was checked for a single run only. The raw response viewer exists to verify this.
+- **Latency metric is mixed:** The average latency combines firewall checks (about 0 ms) with LLM API calls, so it does not represent model latency.
 - **Single target:** Results apply only to the configured model and system prompt at the time of the run. The secret is placed in the system prompt for testing purposes, which is not a recommended practice in production.
 - **Public demo uses the author's API key:** The hosted app may be rate-limited or unavailable.
 
@@ -157,9 +158,55 @@ python -m streamlit run dashboard.py
 
 ---
 
+## 🤖 AI Assistance Disclosure
+
+This project was developed as **guardrails research for the *Foundations of AI Engineering* course (CodePath)**, with the help of AI tools used as assistants:
+
+- **DeepSeek:** support for the initial code (`hydra.py` and the first version of the dashboard), and two evaluations of that first version.
+- **Gemini (Google):** an additional analysis of the first version of the code, obtained for the comparison below.
+- **Claude (Anthropic):** review of the first version, README drafting (scope, limitations, roadmap), and edits to `dashboard.py`.
+
+**Author's contribution:** guardrails research for the *Foundations of AI Engineering* course (CodePath). The author ran the dashboard locally, checked the raw model responses, and published the repository.
+
+### Stage 1: Evaluation of the first version
+
+When the project started, the first version of the code was submitted to several AI tools for evaluation.
+
+| Tool | What it returned | Not covered |
+| :--- | :--- | :--- |
+| DeepSeek (response 1, English) | Concrete defects: API key crash with a ready fix, exact-match detection, no retries, non-determinism; suggested separating firewall and model tests. | `max_tokens` truncation, false-positive testing, single-turn coverage. |
+| DeepSeek (response 2, Spanish) | 11 problems (firewall pre-blocking ATK-001/002, fragile detection, no key validation, no retries, non-determinism, no false-positive testing); recommended a no-firewall baseline, repetitions and benign prompts. Gave subjective scores (6/10 as a demo, 4/10 as a real tool). | `max_tokens` truncation, single-turn coverage, unverifiable Aegis claim. |
+| Gemini | A structured description of the architecture; no defects or limitations listed. | Any critical evaluation. |
+| Claude | Core defects plus methodological limits (statistical validity, result labels, circular firewall results, false positives, coverage). Flagged a truncation risk that was not observed in the author's run. | An explicit no-firewall baseline. |
+
+> This is a qualitative comparison from a single project, with one response per tool (two for DeepSeek, which differed noticeably in depth). It is not a benchmark and should not be generalized.
+
+### Stage 2: Final result
+
+After the evaluations, the following changes were made with Claude's help. `hydra.py` was **not** modified in this stage, so the items marked Open correspond to the roadmap above.
+
+| Issue found | Status in this version |
+| :--- | :--- |
+| README described layers and claims the code does not implement | Addressed: README rewritten with scope, limitations and roadmap |
+| Saved log view displayed API errors as "BLOCKED" | Fixed in `dashboard.py` (error path not exercised in the author's run) |
+| API errors diluted the evasion rate | Fixed: errors are excluded from the rate |
+| Refusals could not be verified | Raw response viewer added; in the author's run the responses were complete refusals |
+| Sidebar claimed the full firewall | Reworded: Layers 1–2 simulated |
+| API key validation | **Open** |
+| Exact-match canary detection | **Open** |
+| Repetitions / attack success rate | **Open** |
+| Retries and rate-limit handling | **Open** |
+| Reproducibility (temperature) | **Open** |
+| No-firewall baseline and benign prompts | **Open** |
+| Real Aegis Sentinel instead of copied rules | **Open** |
+
+**Final state:** a research prototype whose documentation now matches what the code does. The core methodological improvements remain future work.
+
+---
+
 ## ⚖️ Ethical Disclaimer
 
 This tool is built for educational and authorized security testing purposes only. Do not use it against systems you do not own or have explicit permission to test. The author is not responsible for any misuse or damage caused by this program.
 
 ---
-*Built by Gustavo Ramos | Final-Year Computer Science & Information Security Student*
+*Built by Gustavo Ramos | Senior Computer Science & Information Security Student*
