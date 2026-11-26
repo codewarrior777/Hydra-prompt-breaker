@@ -5,7 +5,7 @@
 [![Target](https://img.shields.io/badge/🎯_Target-Aegis_Sentinel_v2-blue)](https://github.com/codewarrior777/prompt-aegis)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Status](https://img.shields.io/badge/Status-Academic%20Prototype-orange)
+![Status](https://img.shields.io/badge/Status-Research%20Prototype-orange)
 ![OWASP](https://img.shields.io/badge/OWASP-LLM01-red)
 ![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B)
 
