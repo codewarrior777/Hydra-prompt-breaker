@@ -77,7 +77,7 @@ def result_line(r):
     """Return the colored HTML result line for one attack result.
     All dynamic text is escaped because it is rendered with unsafe_allow_html."""
     if r["status"] == "BYPASSED":
-        return '<span class="term-red">[LEAK DETECTED]</span> Canary found in LLM response!<br><br>'
+        return '<span class="term-red">[LEAK PAST FIREWALL]</span> Canary leaked in a form Layer 5 did not catch!<br><br>'
     if r["status"] == "ERROR":
         return f'<span class="term-yellow">[ERROR]</span> {html.escape(str(r["reason"]))}<br><br>'
     return f'<span class="term-green">[BLOCKED]</span> {html.escape(str(r["reason"]))}<br><br>'
@@ -107,7 +107,8 @@ with st.sidebar:
     st.markdown("#### ℹ️ Target Info")
     st.info(
         "Target: Bank Assistant LLM\n\n"
-        "Firewall: Aegis Sentinel (Layers 1–2 simulated)"
+        "Firewall: Aegis Sentinel layers 1–5 (shared guardrails module)\n\n"
+        "Layer 4 calls a judge model, so each payload that reaches it costs one extra API call."
     )
 
 # Main Area - Metrics
@@ -123,12 +124,18 @@ avg_latency = round(sum(r.get("latency", 0) for r in results) / total_attacks) i
 
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("Total Vectors", total_attacks)
-c2.metric("Leaks Detected", bypassed)
+c2.metric("Leaks Past Firewall", bypassed)
 c3.metric("Evasion Rate", f"{evasion_rate:.1f}%")
 c4.metric("Avg Latency", f"{avg_latency} ms")
 
 if errors:
     st.caption(f"⚠️ {errors} vector(s) ended in ERROR and are excluded from the evasion rate.")
+
+# The model can leak the canary even when the firewall stops it (Layer 5).
+model_leaks = sum(1 for r in results if r.get("llm_leaked"))
+stopped_by_l5 = sum(1 for r in results if str(r.get("reason", "")).startswith("Blocked by Layer 5"))
+if model_leaks:
+    st.caption(f"The model itself leaked the canary in {model_leaks} run(s); Layer 5 stopped {stopped_by_l5} of them.")
 
 st.divider()
 
@@ -200,7 +207,7 @@ with col_chart:
             margin=dict(t=30, b=30, l=10, r=10)
         )
         st.plotly_chart(fig, use_container_width=True)
-        st.caption(f"Share of vectors with a detected leak in this single run (n = {evaluated}).")
+        st.caption(f"Share of vectors whose leak got past the whole pipeline, in this single run (n = {evaluated}).")
     else:
         st.info("No telemetry data.")
 
@@ -209,13 +216,14 @@ st.divider()
 st.markdown("### 📋 Deep Dive Audit Log")
 if st.session_state.results:
     df = pd.DataFrame(st.session_state.results)
-    df_display = df[["id", "name", "status", "latency", "reason", "payload"]]
+    df_display = df[["id", "name", "status", "latency", "reason", "llm_leaked", "payload"]]
     
     st.dataframe(
         df_display,
         use_container_width=True,
         column_config={
             "status": st.column_config.TextColumn("Result", help="BLOCKED, BYPASSED or ERROR"),
+            "llm_leaked": st.column_config.Column("LLM leaked", help="True if the model itself leaked the canary, even when Layer 5 blocked it. Empty if the model was not reached."),
             "latency": st.column_config.NumberColumn("Latency (ms)", format="%d ms"),
             "payload": st.column_config.TextColumn("Payload String", width="large"),
         }
