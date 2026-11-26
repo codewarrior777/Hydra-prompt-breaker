@@ -1,3 +1,96 @@
+# 🐍 Hydra-Prompt-Breaker: Automated LLM Red Teaming
+
+[![Live App](https://img.shields.io/badge/🚀_Live_App-Try_It_Here-brightgreen?style=for-the-badge&logo=streamlit)](https://hydra-prompt-breaker-siyczpjzqlujp42drzgtwz.streamlit.app/)
+[![Watch Demo](https://img.shields.io/badge/🎥_Watch_Demo-View_GIF-success?style=for-the-badge)](https://github.com/codewarrior777/Hydra-prompt-breaker#-live-action-demo)
+[![Target](https://img.shields.io/badge/🎯_Target-Aegis_Sentinel_v2-blue)](https://github.com/codewarrior777/prompt-aegis)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+![License](https://img.shields.io/badge/License-MIT-green)
+![Status](https://img.shields.io/badge/Status-Research%20Prototype-orange)
+![OWASP](https://img.shields.io/badge/OWASP-LLM01-red)
+![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B)
+
+**Hydra-Prompt-Breaker** is a research prototype of an automated adversarial testing harness for Large Language Model (LLM) applications.
+
+It was built to explore and demonstrate the methodology of LLM red teaming against **[Aegis Sentinel](https://github.com/codewarrior777/prompt-aegis)**, a multi-layer AI firewall project. Hydra uses the guardrail layers (1–5) of Aegis Sentinel through a `guardrails.py` module extracted from the Aegis code. In this repository it is a vendored copy, so it can drift from Aegis until both projects share a single source. See the Known Limitations section below.
+
+> *"In mythology, cutting off one of Hydra's heads causes two more to grow in its place. This mirrors the cat-and-mouse game of AI Security: block one prompt injection, and attackers will mutate the payload into new variations."*
+
+## 🎓 Project Status & Scope
+
+This is a **pre-graduation academic project** (Computer Science & Information Security) and guardrails research for the *Foundations of AI Engineering* course (CodePath), built to learn and demonstrate how automated LLM red teaming works. It is a **prototype, not a validated security assessment tool**. Its results should not be read as a measurement of how secure Aegis Sentinel or any target model is.
+
+## 🎥 Live Action Demo
+
+![Hydra Dashboard Demo](assets/hydra_live_demo.gif)
+
+---
+
+## 🏗️ Red Teaming Architecture (Attack Flow)
+
+Each payload goes through the Aegis input layers: Layers 1–3 (regex, encoding, PII) and, if they find nothing, Layer 4 (a semantic judge model). If it passes, it is sent to the target LLM. The response then goes through Layer 5 (exact-match output filter) and through an independent leak detector that also looks for non-exact forms of the planted canary secret.
+
+```mermaid
+graph TD
+    A[Hydra Engine Starts] --> B{Select Payload}
+
+    B -->|ATK-001| C[Direct Injection]
+    B -->|ATK-002| D[Base64 Obfuscation]
+    B -->|ATK-003| E[Roleplay Jailbreak]
+    B -->|ATK-004| F[Grandma Exploit]
+    B -->|ATK-005| G[Context Swapping]
+
+    C --> H["Aegis Layers 1-3: Regex, Encoding, PII"]
+    D --> H
+    E --> H
+    F --> H
+    G --> H
+
+    H -->|Finding| I["🛡️ Blocked by Layers 1-3"]
+    H -->|No finding| P["Aegis Layer 4: Semantic Judge"]
+
+    P -->|Flagged| Q["🛡️ Blocked by Layer 4"]
+    P -->|Judge unavailable| R["⚠️ ERROR: inconclusive"]
+    P -->|Safe| M[Target LLM]
+
+    M --> S{"Layer 5: exact canary in output?"}
+    S -->|Yes| T["🛡️ Blocked by Layer 5 - the model leaked"]
+    S -->|No| N{"Independent detector: leak in another form?"}
+    N -->|Yes| J["🔥 Leak past firewall"]
+    N -->|No| O["🛡️ LLM refused"]
+
+    I --> K[Log Event to Terminal]
+    Q --> K
+    R --> K
+    T --> K
+    J --> K
+    O --> K
+
+    K --> L[Generate Evasion Gauge]
+
+    style A fill:#0d1117,stroke:#58a6ff,stroke-width:2px,color:#fff
+    style H fill:#0d1117,stroke:#ff003c,stroke-width:2px,color:#fff
+    style P fill:#0d1117,stroke:#ff003c,stroke-width:2px,color:#fff
+    style M fill:#0d1117,stroke:#ff003c,stroke-width:2px,color:#fff
+    style I fill:#003a0e,stroke:#00ff41,stroke-width:2px,color:#00ff41
+    style Q fill:#003a0e,stroke:#00ff41,stroke-width:2px,color:#00ff41
+    style T fill:#003a0e,stroke:#00ff41,stroke-width:2px,color:#00ff41
+    style O fill:#003a0e,stroke:#00ff41,stroke-width:2px,color:#00ff41
+    style R fill:#3a2e00,stroke:#ffd000,stroke-width:2px,color:#ffd000
+    style J fill:#3a0000,stroke:#ff003c,stroke-width:2px,color:#ff003c
+    style K fill:#0d1117,stroke:#d2a8ff,stroke-width:2px,color:#fff
+```
+
+---
+
+## 🛠️ Features
+
+- **Terminal-Style Execution Log:** Watch the attacks execute in sequence with color-coded results (green for blocked, red for a leak past the firewall, yellow for errors).
+- **Evasion Gauge:** A Plotly speedometer showing the share of evaluated vectors whose leak got past the whole pipeline in a single run. Vectors that end in an error (for example, an API failure or an unavailable judge) are excluded from the rate.
+- **Audit Log:** A data table with latency (ms), the reason for each result, whether the model itself leaked the canary (even when Layer 5 stopped it), and the raw payload string.
+- **Raw Response Viewer:** View the exact response of every vector, not only leaks, so that refusals can be verified by eye. Empty responses labeled as refusals are flagged with a warning.
+- **Independent Leak Detector:** Besides Layer 5's exact match, the harness checks for leaks in other case/spacing/separators, reversed, Base64 and hex forms, so that a bypass of Layer 5 can be observed.
+
+---
 ## 🎯 Attack Payload Matrix
 
 The payloads are inspired by prompt injection categories described under OWASP Top 10 for LLM Applications (LLM01).
