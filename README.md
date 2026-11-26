@@ -162,4 +162,4 @@ python -m streamlit run dashboard.py
 This tool is built for educational and authorized security testing purposes only. Do not use it against systems you do not own or have explicit permission to test. The author is not responsible for any misuse or damage caused by this program.
 
 ---
-*Built by Gustavo Ramos | Computer Science & Information Security Student*
+*Built by Gustavo Ramos | Senior Computer Science & Information Security Student*
